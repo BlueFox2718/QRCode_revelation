@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Code avec logo en ligne</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+
+    input, select, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+    }
+
+    .qrcode-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 20px;
+    }
+
+    canvas {
+      border: 1px solid #ccc;
+    }
+
+    #error-msg {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  1. Entrez l'URL dont vous voulez générer le QR Code (max 33 caractères)<br>
+  <input type="text" id="text" placeholder="www.exemple.com"><br>
+
+  2. Saissisez le mot de passe obtenu lors de l'achat de ce produit.<br>
+  <input type="password" id="password" placeholder="Mot de passe">
+  <div id="error-msg"></div>
+
+  <br>
+
+  3. Selectionnez le type de symbole à mettre sur le QR Code. <br>
+  <label for="logoSelect"></label>
+  <select id="logoSelect">
+    <option value="">Aucune</option>
+  </select>
+  <br>
+
+  4.<button onclick="generateQRCodes()">Générer</button>
+
+  <div class="qrcode-container">
+    <div>
+      <h3>QR Code standard</h3>
+      <div id="qrcode-normal"></div>
+    </div>
+    <div>
+      <h3>QR Code avec image</h3>
+      <canvas id="qrcode-with-logo" width="256" height="256"></canvas>
+    </div>
+  </div>
+5.Faites clique droit sur l'image puis "Enregistrer sous" pour la sauvegarder.
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+
+  <script>
+    const logos = [
+      { name: "CARTE: As de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/AP.png" },
+      { name: "CARTE: 2 de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/2P.png" },
+      { name: "CARTE: 3 de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/3P.png" },
+      { name: "CARTE: 4 de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/4P.png" },
+      { name: "CARTE: 5 de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/5P.png" },
+      { name: "CARTE: 6 de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/6P.png" },
+      { name: "CARTE: 7 de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/7P.png" },
+      { name: "CARTE: 8 de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/8P.png" },
+      { name: "CARTE: 9 de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/9P.png" },
+      { name: "CARTE: 10 de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/10P.png" },
+      { name: "CARTE: Valet de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/JP.png" },
+      { name: "CARTE: Dame de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/QP.png" },
+      { name: "CARTE: Roi de pique", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/KP.png" },
+      { name: "CARTE: As de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/AK.png" },
+      { name: "CARTE: 2 de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/2K.png" },
+      { name: "CARTE: 3 de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/3K.png" },
+      { name: "CARTE: 4 de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/4K.png" },
+      { name: "CARTE: 5 de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/5K.png" },
+      { name: "CARTE: 6 de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/6K.png" },
+      { name: "CARTE: 7 de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/7K.png" },
+      { name: "CARTE: 8 de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/8K.png" },
+      { name: "CARTE: 9 de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/9K.png" },
+      { name: "CARTE: 10 de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/10K.png" },
+      { name: "CARTE: Valet de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/JK.png" },
+      { name: "CARTE: Dame de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/QK.png" },
+      { name: "CARTE: Roi de coeur", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/KK.png" },
+      { name: "CARTE: As de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/AT.png" },
+      { name: "CARTE: 2 de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/2T.png" },
+      { name: "CARTE: 3 de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/3T.png" },
+      { name: "CARTE: 4 de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/4T.png" },
+      { name: "CARTE: 5 de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/5T.png" },
+      { name: "CARTE: 6 de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/6T.png" },
+      { name: "CARTE: 7 de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/7T.png" },
+      { name: "CARTE: 8 de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/8T.png" },
+      { name: "CARTE: 9 de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/9T.png" },
+      { name: "CARTE: 10 de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/10T.png" },
+      { name: "CARTE: Valet de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/JT.png" },
+      { name: "CARTE: Dame de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/QT.png" },
+      { name: "CARTE: Roi de trefle", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/KT.png" },
+      { name: "CARTE: As de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/AC.png" },
+      { name: "CARTE: 2 de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/2C.png" },
+      { name: "CARTE: 3 de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/3C.png" },
+      { name: "CARTE: 4 de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/4C.png" },
+      { name: "CARTE: 5 de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/5C.png" },
+      { name: "CARTE: 6 de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/6C.png" },
+      { name: "CARTE: 7 de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/7C.png" },
+      { name: "CARTE: 8 de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/8C.png" },
+      { name: "CARTE: 9 de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/9C.png" },
+      { name: "CARTE: 10 de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/10C.png" },
+      { name: "CARTE: Valet de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/JC.png" },
+      { name: "CARTE: Dame de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/QC.png" },
+      { name: "CARTE: Roi de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/KC.png" },
+	  { name: "CARTE: 2 de carreau", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/2C.png" },
+	  { name: "ESP: ROND", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/ESP_ROND.png" },
+	  { name: "ESP: CROIX", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/ESP_CROIX.png" },
+	  { name: "ESP: VAGUES", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/ESP_VAGUE.png" },
+	  { name: "ESP: CARRE", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/ESP_CARRE.png" },
+	  { name: "ESP: ETOILE", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/ESP_ETOILE.png" },
+	  { name: "NOMBRE: 12", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/NOMBRE_12.png" },
+	  { name: "NOMBRE: 27", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/27.png" },
+	  { name: "NOMBRE: 36", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/NOMBRE_36.png" },
+	  { name: "NOMBRE: 52", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/NOMBRE_52.png" },
+	  { name: "LETTRE: A", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_A.png" },
+	  { name: "LETTRE: B", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_B.png" },
+	  { name: "LETTRE: C", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_C.png" },
+	  { name: "LETTRE: D", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_D.png" },
+	  { name: "LETTRE: E", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_E.png" },
+	  { name: "LETTRE: F", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_F.png" },
+	  { name: "LETTRE: G", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_G.png" },
+	  { name: "LETTRE: H", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_H.png" },
+	  { name: "LETTRE: I", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_I.png" },
+	  { name: "LETTRE: J", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_J.png" },
+	  { name: "LETTRE: K", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_K.png" },
+	  { name: "LETTRE: L", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_L.png" },
+	  { name: "LETTRE: M", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_M.png" },
+	  { name: "LETTRE: N", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_N.png" },
+	  { name: "LETTRE: O", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_O.png" },
+	  { name: "LETTRE: P", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_P.png" },
+	  { name: "LETTRE: Q", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_Q.png" },
+	  { name: "LETTRE: R", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_R.png" },
+	  { name: "LETTRE: S", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_S.png" },
+	  { name: "LETTRE: T", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_T.png" },
+	  { name: "LETTRE: U", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_U.png" },
+	  { name: "LETTRE: V", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_V.png" },
+	  { name: "LETTRE: W", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_W.png" },
+	  { name: "LETTRE: X", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_X.png" },
+	  { name: "LETTRE: Y", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_Y.png" },
+	  { name: "LETTRE: Z", url: "https://cdn.jsdelivr.net/gh/BlueFox2718/QRCode_revelation/LETTRE_Z.png" }
+    ];
+
+    const logoSelect = document.getElementById("logoSelect");
+    logos.forEach(logo => {
+      const option = document.createElement("option");
+      option.value = logo.url;
+      option.textContent = logo.name;
+      logoSelect.appendChild(option);
+    });
+
+    async function generateQRCodes() {
+      const text = document.getElementById("text").value.trim();
+      const password = document.getElementById("password").value;
+      const errorMsg = document.getElementById("error-msg");
+      const logoURL = document.getElementById("logoSelect").value;
+      const normalContainer = document.getElementById("qrcode-normal");
+      const canvas = document.getElementById("qrcode-with-logo");
+      const ctx = canvas.getContext("2d");
+
+      // Réinitialisation
+      errorMsg.textContent = "";
+      normalContainer.innerHTML = "";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (text === "" || password === "") {
+        errorMsg.textContent = "Veuillez remplir tous les champs.";
+        return;
+      }
+
+      // Hash SHA256
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+      const expectedHash = "8882d9cc6959f8fce3a00c1c249a8427df17da8a1851e0b4defc9587bb461e8e";
+      if (hashHex !== expectedHash) {
+        errorMsg.textContent = "Mot de passe incorrect";
+        return;
+      }
+
+      // QR Code standard
+      new QRCode(normalContainer, {
+        text: text,
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      // QR Code avec logo
+      const tempDiv = document.createElement("div");
+      const tempQRCode = new QRCode(tempDiv, {
+        text: text,
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      setTimeout(() => {
+        const img = tempDiv.querySelector("img");
+        if (!img) return;
+
+        const qrImg = new Image();
+        qrImg.onload = () => {
+          ctx.drawImage(qrImg, 0, 0, 256, 256);
+
+          if (logoURL) {
+            const logoImg = new Image();
+            logoImg.crossOrigin = "anonymous";
+            logoImg.src = logoURL;
+            logoImg.onload = () => {
+              const qrSize = 256;
+              const estimatedModules = 28;
+              const tileSize = qrSize / estimatedModules;
+
+              let logoModules = 9;
+              while ((logoModules * tileSize) > (qrSize / 3)) {
+                logoModules -= 2;
+              }
+
+              const logoSize = logoModules * tileSize;
+              const x = (qrSize - logoSize) / 2;
+              const y = (qrSize - logoSize) / 2;
+
+              ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+            };
+          }
+        };
+        qrImg.src = img.src;
+      }, 100);
+    }
+  </script>
+</body>
+</html>
